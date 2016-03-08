@@ -2,10 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/boltdb/bolt"
-	"github.com/codegangsta/cli"
 	"io/ioutil"
 	"log"
+
+	"github.com/boltdb/bolt"
+	"github.com/codegangsta/cli"
 )
 
 var Commands = []cli.Command{

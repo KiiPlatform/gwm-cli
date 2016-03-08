@@ -1,13 +1,14 @@
 package main
 
 import (
+	"io/ioutil"
+	"log"
+	"os"
+
 	"github.com/KiiPlatform/kii_go"
 	"github.com/boltdb/bolt"
 	"github.com/codegangsta/cli"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"log"
-	"os"
 )
 
 type Config struct {

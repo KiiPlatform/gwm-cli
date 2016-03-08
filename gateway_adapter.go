@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/KiiPlatform/kii_go"
 	"github.com/koron/go-dproxy"
 )
 
@@ -46,22 +45,6 @@ func localAuth(addr GatewayAddress, app App, username string, password string) (
 		return "", err
 	}
 	return t, nil
-}
-
-func _updateVID(app App, user User, currentID string, newVID string, password string) error {
-	author := kii.APIAuthor{
-		App: kii.App{
-			AppID:    app.ID,
-			AppKey:   app.Key,
-			Location: app.Site,
-		},
-	}
-	author.Token = user.Token
-	req := kii.UpdateVendorThingIDRequest{
-		VendorThingID: newVID,
-		Password:      password,
-	}
-	return author.UpdateVendorThingID(currentID, req)
 }
 
 func _replaceNode(addr GatewayAddress, app App, node Node, token string) error {
@@ -127,51 +110,6 @@ func _mapNode(addr GatewayAddress, app App, node Node, token string) error {
 	return nil
 }
 
-func _postCommand(app App, user User, nodeID string, command []byte) (resp *kii.PostCommandResponse, err error) {
-	author := kii.APIAuthor{
-		App: kii.App{
-			AppID:    app.ID,
-			AppKey:   app.Key,
-			Location: app.Site,
-		},
-	}
-	author.Token = user.Token
-
-	var req kii.PostCommandRequest
-	err = json.Unmarshal(command, &req)
-	// overwrite issuer.
-	req.Issuer = "user:" + user.ID
-	if err != nil {
-		return
-	}
-	return author.PostCommand(nodeID, req)
-}
-
-func _onboardNode(app App, user User, gatewayID string, nodeVID string, nodePass string) (string, error) {
-	author := kii.APIAuthor{
-		App: kii.App{
-			AppID:    app.ID,
-			AppKey:   app.Key,
-			Location: app.Site,
-		},
-	}
-	author.Token = user.Token
-	req := kii.OnboardEndnodeWithGatewayThingIDRequest{
-		GatewayThingID: gatewayID,
-		OnboardEndnodeRequestCommon: kii.OnboardEndnodeRequestCommon{
-			EndNodeVendorThingID: nodeVID,
-			EndNodePassword:      nodePass,
-			Owner:                "user:" + user.ID,
-		},
-	}
-	resp, err := author.OnboardEndnodeWithGatewayThingID(req)
-	if err != nil {
-		return "", err
-	}
-	nodeID := resp.EndNodeThingID
-	return nodeID, err
-}
-
 func _listPendingNodes(addr GatewayAddress, app App, token string) ([]interface{}, error) {
 	url := fmt.Sprintf("http://%s:%d/%s/apps/%s/gateway/end-nodes/pending",
 		addr.Host, addr.Port, app.Site, app.ID)
@@ -188,50 +126,6 @@ func _listPendingNodes(addr GatewayAddress, app App, token string) ([]interface{
 		return nil, err
 	}
 	return dproxy.New(v).Array()
-}
-
-func _userLogin(app App, username string, password string) (id string, token string, err error) {
-	author := kii.APIAuthor{
-		App: kii.App{
-			AppID:    app.ID,
-			AppKey:   app.Key,
-			Location: app.Site,
-		},
-	}
-	req := kii.UserRegisterRequest{
-		LoginName: username,
-		Password:  password,
-	}
-	author.RegisterKiiUser(req)
-	req2 := kii.UserLoginRequest{
-		UserName: username,
-		Password: password,
-	}
-	resp, err := author.LoginAsKiiUser(req2)
-	if err != nil {
-		return
-	}
-	id = resp.ID
-	token = resp.AccessToken
-	return
-}
-
-func _addOwner(app App, userID string, userToken string, gatewayID string, gatewayPassword string) error {
-	author := kii.APIAuthor{
-		App: kii.App{
-			AppID:    app.ID,
-			AppKey:   app.Key,
-			Location: app.Site,
-		},
-	}
-	author.Token = userToken
-	req3 := kii.OnboardByOwnerRequest{
-		ThingID:       gatewayID,
-		ThingPassword: gatewayPassword,
-		Owner:         "user:" + userID,
-	}
-	_, err := author.OnboardThingByOwner(req3)
-	return err
 }
 
 func _onboardGateway(addr GatewayAddress, app App, token string) (string, error) {
