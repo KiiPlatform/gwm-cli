@@ -1,0 +1,7 @@
+{
+    "issuer":"user:{user-id}",
+    "schema":"SmartLightDemo",
+    "schemaVersion":1,
+    "actions":[{"turnPower":{"power":true}}]
+}
+

@@ -22,3 +22,13 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# exclude config/ command.json
+/config.yml
+/command.json
+
+# exclude binary
+/gwm-cli
+
+# exclude db
+/manager.db

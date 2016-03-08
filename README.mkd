@@ -1,0 +1,23 @@
+## How to use
+
+### Build
+```shell
+go get -t -d -v ./...
+go build
+```
+
+### Debug Build
+In debug build, you can see the access log.
+```shell
+go build -tags debug
+```
+
+### Copy configuration and sample Command
+```shell
+cp example/config.yml .
+cp example/command.json .
+```
+
+### Run
+./gwm-cli --help
+
