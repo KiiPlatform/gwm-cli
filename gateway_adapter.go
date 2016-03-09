@@ -129,6 +129,37 @@ func _listPendingNodes(addr GatewayAddress, app App, token string) ([]interface{
 }
 
 func _onboardGateway(addr GatewayAddress, app App, token string) (string, error) {
+	url := fmt.Sprintf("http://%s:%d/%s/apps/%s/gateway/onboarding", addr.Host, addr.Port, app.Site, app.ID)
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	log.Printf("resp body:%s\n", string(body))
+	var v interface{}
+	err = json.Unmarshal(body, &v)
+	if err != nil {
+		return "", err
+	}
+	t, err := dproxy.New(v).M("thingID").String()
+	if err != nil {
+		return "", err
+	}
+	return t, nil
+}
+
+func _onboardMasterGateway(addr GatewayAddress, app App, token string) (string, error) {
 	if token == "" {
 		return "", errors.New("token is not given")
 	}
