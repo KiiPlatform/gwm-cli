@@ -130,10 +130,13 @@ var auth = cli.Command{
 
 var onboardGateway = cli.Command{
 	Name:  "onboard-gateway",
-	Usage: "onboard-gateway --app-name <app name>",
+	Usage: "onboard-gateway [--master] --app-name <app name>",
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name: "app-name",
+		},
+		cli.BoolFlag{
+			Name: "master",
 		},
 	},
 	Action: func(c *cli.Context) {
@@ -141,6 +144,7 @@ var onboardGateway = cli.Command{
 		if appName == "" {
 			log.Fatalln("no app-name is specified")
 		}
+		master := c.Bool("master")
 		var token string
 		db.View(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("tokens"))
@@ -154,7 +158,13 @@ var onboardGateway = cli.Command{
 		}
 		app := gConfig.Apps[appName]
 		addr := gConfig.GatewayAddress
-		id, err := _onboardGateway(addr, app, token)
+		var f func(GatewayAddress, App, string) (string, error)
+		if master {
+			f = _onboardMasterGateway
+		} else {
+			f = _onboardGateway
+		}
+		id, err := f(addr, app, token)
 		if err != nil {
 			log.Fatalln("local rest api authenticatoin error: %+v", err)
 		}
@@ -310,6 +320,9 @@ var onboardNode = cli.Command{
 		}
 		app := gConfig.Apps[appName]
 		nodeID, err := _onboardNode(app, user, gatewayID, nodeVID, nodePass)
+		if err != nil {
+			log.Fatalln("failed to onboard node: ", err)
+		}
 		node := Node{
 			ID:  nodeID,
 			VID: nodeVID,
