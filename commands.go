@@ -529,7 +529,7 @@ var replaceNode = cli.Command{
 
 var showDB = cli.Command{
 	Name:  "show-db",
-	Usage: "show-db --bucket <bucket name>",
+	Usage: "--bucket <bucket name> [--all]",
 	UsageText: `show entries stored in the db.
 	available bucket name:
 	tokens - show stored tokens. `,
@@ -540,19 +540,37 @@ var showDB = cli.Command{
 			Name:  "bucket",
 			Usage: "bucket name of the DB",
 		},
+		cli.BoolFlag{
+			Name:  "all",
+			Usage: "Specifiy this option to dump DB",
+		},
 	},
 	Action: func(c *cli.Context) {
+		all := c.Bool("all")
 		bucketName := c.String("bucket")
-		if bucketName == "" {
+		if bucketName == "" && !all {
 			log.Fatalln("no bucket is specified")
 		}
-		db.View(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte(bucketName))
-			c := b.Cursor()
-			for k, v := c.First(); k != nil; k, v = c.Next() {
-				log.Printf("key: %s, value: %s\n", k, v)
-			}
-			return nil
-		})
+		if all {
+			db.View(func(tx *bolt.Tx) error {
+				return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+					log.Println("****** bucket: ", string(name), " ******")
+					c := b.Cursor()
+					for k, v := c.First(); k != nil; k, v = c.Next() {
+						log.Printf("key: %s, value: %s\n", k, v)
+					}
+					return nil
+				})
+			})
+		} else {
+			db.View(func(tx *bolt.Tx) error {
+				b := tx.Bucket([]byte(bucketName))
+				c := b.Cursor()
+				for k, v := c.First(); k != nil; k, v = c.Next() {
+					log.Printf("key: %s, value: %s\n", k, v)
+				}
+				return nil
+			})
+		}
 	},
 }
