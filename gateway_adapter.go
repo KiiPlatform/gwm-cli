@@ -125,7 +125,7 @@ func _listPendingNodes(addr GatewayAddress, app App, token string) ([]interface{
 		fmt.Printf("parse body error:%v", err)
 		return nil, err
 	}
-	return dproxy.New(v).Array()
+	return dproxy.New(v).M("results").Array()
 }
 
 func _onboardGateway(addr GatewayAddress, app App, token string) (string, error) {
