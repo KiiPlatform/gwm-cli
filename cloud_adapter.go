@@ -42,7 +42,7 @@ func _postCommand(app App, user User, nodeID string, command []byte) (resp *kii.
 	return author.PostCommand(nodeID, req)
 }
 
-func _onboardNode(app App, user User, gatewayID string, nodeVID string, nodePass string) (string, error) {
+func _onboardNode(app App, user User, gatewayID string, nodeVID string, nodePass string, thingType string, firmwareVersion string) (string, error) {
 	author := kii.APIAuthor{
 		App: kii.App{
 			AppID:    app.ID,
@@ -54,9 +54,11 @@ func _onboardNode(app App, user User, gatewayID string, nodeVID string, nodePass
 	req := kii.OnboardEndnodeWithGatewayThingIDRequest{
 		GatewayThingID: gatewayID,
 		OnboardEndnodeRequestCommon: kii.OnboardEndnodeRequestCommon{
-			EndNodeVendorThingID: nodeVID,
-			EndNodePassword:      nodePass,
-			Owner:                "user:" + user.ID,
+			EndNodeVendorThingID:   nodeVID,
+			EndNodePassword:        nodePass,
+			Owner:                  "user:" + user.ID,
+			EndNodeThingType:       thingType,
+			EndNodeFirmwareVersion: firmwareVersion,
 		},
 	}
 	resp, err := author.OnboardEndnodeWithGatewayThingID(req)

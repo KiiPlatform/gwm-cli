@@ -110,7 +110,7 @@ func _mapNode(addr GatewayAddress, app App, node Node, token string) error {
 	return nil
 }
 
-func _listPendingNodes(addr GatewayAddress, app App, token string) ([]interface{}, error) {
+func _listPendingNodes(addr GatewayAddress, app App, token string) ([]string, error) {
 	url := fmt.Sprintf("http://%s:%d/%s/apps/%s/gateway/end-nodes/pending",
 		addr.Host, addr.Port, app.Site, app.ID)
 	req, _ := http.NewRequest("GET", url, nil)
@@ -125,7 +125,7 @@ func _listPendingNodes(addr GatewayAddress, app App, token string) ([]interface{
 		fmt.Printf("parse body error:%v", err)
 		return nil, err
 	}
-	return dproxy.New(v).M("results").Array()
+	return dproxy.New(v).Q("vendorThingID").StringArray()
 }
 
 func _onboardGateway(addr GatewayAddress, app App, token string) (string, error) {
