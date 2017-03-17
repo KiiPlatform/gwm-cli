@@ -269,7 +269,7 @@ var listPendingNodes = cli.Command{
 
 var onboardNode = cli.Command{
 	Name:      "onboard-node",
-	Usage:     "onboard-node --node-vid <end-node vendor thing id> --node-password <end-node password> --app-name <app name>",
+	Usage:     "onboard-node --node-vid <end-node vendor thing id> --node-password <end-node password> --node-type <end-node thing type> --node-fv <end-node firmware version> --app-name <app name>",
 	Aliases:   []string{"on"},
 	UsageText: "Execute onboard for specified end-node",
 	Flags: []cli.Flag{
@@ -284,11 +284,21 @@ var onboardNode = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.StringFlag{
+			Name:  "node-type",
+			Usage: "end node thingType",
+		},
+		cli.StringFlag{
+			Name:  "node-fv",
+			Usage: "end node firmware version",
+		},
 	},
 	Action: func(c *cli.Context) {
 		nodeVID := c.String("node-vid")
 		nodePass := c.String("node-password")
 		appName := c.String("app-name")
+		nodeType := c.String("node-type")
+		nodeFv := c.String("node-fv")
 		var gatewayID string
 		var user User
 		var token string
@@ -319,7 +329,7 @@ var onboardNode = cli.Command{
 			log.Fatalln("token is not stored for the specified app. execute auth.")
 		}
 		app := gConfig.Apps[appName]
-		nodeID, err := _onboardNode(app, user, gatewayID, nodeVID, nodePass)
+		nodeID, err := _onboardNode(app, user, gatewayID, nodeVID, nodePass, nodeType, nodeFv)
 		if err != nil {
 			log.Fatalln("failed to onboard node: ", err)
 		}
