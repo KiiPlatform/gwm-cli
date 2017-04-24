@@ -24,6 +24,7 @@ type App struct {
 	ID   string `yaml:"app-id"`
 	Key  string `yaml:"app-key"`
 	Site string `yaml:"app-site"`
+	Host string `yaml:"app-host"`
 }
 
 type User struct {
