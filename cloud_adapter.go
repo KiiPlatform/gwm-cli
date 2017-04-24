@@ -6,12 +6,19 @@ import (
 	"github.com/KiiPlatform/kii_go"
 )
 
+func location(app App) string {
+	if len(app.Host) > 0 {
+		return app.Host
+	}
+	return app.Site
+}
+
 func _updateVID(app App, user User, currentID string, newVID string, password string) error {
 	author := kii.APIAuthor{
 		App: kii.App{
 			AppID:    app.ID,
 			AppKey:   app.Key,
-			Location: app.Host,
+			Location: location(app),
 		},
 	}
 	author.Token = user.Token
@@ -27,7 +34,7 @@ func _postCommand(app App, user User, nodeID string, command []byte) (resp *kii.
 		App: kii.App{
 			AppID:    app.ID,
 			AppKey:   app.Key,
-			Location: app.Host,
+			Location: location(app),
 		},
 	}
 	author.Token = user.Token
@@ -47,7 +54,7 @@ func _onboardNode(app App, user User, gatewayID string, nodeVID string, nodePass
 		App: kii.App{
 			AppID:    app.ID,
 			AppKey:   app.Key,
-			Location: app.Host,
+			Location: location(app),
 		},
 	}
 	author.Token = user.Token
@@ -74,7 +81,7 @@ func _userLogin(app App, username string, password string) (id string, token str
 		App: kii.App{
 			AppID:    app.ID,
 			AppKey:   app.Key,
-			Location: app.Host,
+			Location: location(app),
 		},
 	}
 	req := kii.UserRegisterRequest{
@@ -100,7 +107,7 @@ func _addOwner(app App, userID string, userToken string, gatewayID string, gatew
 		App: kii.App{
 			AppID:    app.ID,
 			AppKey:   app.Key,
-			Location: app.Host,
+			Location: location(app),
 		},
 	}
 	author.Token = userToken
