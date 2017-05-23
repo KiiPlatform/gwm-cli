@@ -378,11 +378,15 @@ var postCommand = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.BoolFlag{
+			Name: "trait",
+		},
 	},
 	Action: func(c *cli.Context) {
 		nodeVID := c.String("node-vid")
 		path := c.String("command-file")
 		appName := c.String("app-name")
+		isTrait := c.Bool("trait")
 
 		b, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -415,6 +419,14 @@ var postCommand = cli.Command{
 			log.Fatalln("can not find end-node. execute onboard-node")
 		}
 		app := gConfig.Apps[appName]
+		if isTrait {
+			resp, err := _postTraitCommand(app, user, node.ID, b)
+			if err != nil {
+				log.Fatalln("failed to post trait command: ", err)
+			}
+			log.Printf("post trait command resp: %v", resp)
+			return
+		}
 		resp, err := _postCommand(app, user, node.ID, b)
 		if err != nil {
 			log.Fatalln("failed to post command: ", err)
