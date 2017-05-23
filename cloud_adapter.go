@@ -42,6 +42,26 @@ func _postCommand(app App, user User, nodeID string, command []byte) (resp *kii.
 	return author.PostCommand(nodeID, req)
 }
 
+func _postTraitCommand(app App, user User, nodeID string, command []byte) (resp *kii.PostCommandResponse, err error) {
+	author := kii.APIAuthor{
+		App: kii.App{
+			AppID:    app.ID,
+			AppKey:   app.Key,
+			Location: app.Site,
+		},
+	}
+	author.Token = user.Token
+
+	var req kii.PostCommandRequest
+	err = json.Unmarshal(command, &req)
+	// overwrite issuer.
+	req.Issuer = "user:" + user.ID
+	if err != nil {
+		return
+	}
+	return author.PostTraitCommand(nodeID, req)
+}
+
 func _onboardNode(app App, user User, gatewayID string, nodeVID string, nodePass string, thingType string, firmwareVersion string) (string, error) {
 	author := kii.APIAuthor{
 		App: kii.App{
