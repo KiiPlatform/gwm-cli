@@ -24,7 +24,7 @@ var Commands = []cli.Command{
 
 var userLogin = cli.Command{
 	Name:      "user-login",
-	Usage:     "user-login --username <user name> --password <password> --app-name <app name>",
+	Usage:     "user-login --username <user name> --password <password> --app-name <app name> --config <path to config yml>",
 	UsageText: "Kii Cloud User Login. This user will be an owner of the Gateway",
 	Flags: []cli.Flag{
 		cli.StringFlag{
@@ -38,11 +38,19 @@ var userLogin = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		username := c.String("username")
 		password := c.String("password")
 		appName := c.String("app-name")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		if username == "" {
 			log.Fatalln("no username is specified")
 		}
@@ -92,11 +100,19 @@ var auth = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		username := c.String("username")
 		password := c.String("password")
 		appName := c.String("app-name")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		if username == "" {
 			log.Fatalln("no username is specified")
 		}
@@ -138,9 +154,17 @@ var onboardGateway = cli.Command{
 		cli.BoolFlag{
 			Name: "master",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		appName := c.String("app-name")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		if appName == "" {
 			log.Fatalln("no app-name is specified")
 		}
@@ -194,10 +218,18 @@ var addOwner = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		gatewayPassword := c.String("gateway-password")
 		appName := c.String("app-name")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		if gatewayPassword == "" {
 			log.Fatalln("no gateway-password specified.")
 		}
@@ -206,7 +238,7 @@ var addOwner = cli.Command{
 		}
 		var id string
 		var user User
-		err := db.View(func(tx *bolt.Tx) error {
+		err = db.View(func(tx *bolt.Tx) error {
 			// Retrieve gateway id.
 			b := tx.Bucket([]byte("gateway-ids"))
 			v := b.Get([]byte(appName))
@@ -244,11 +276,19 @@ var listPendingNodes = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		appName := c.String("app-name")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		var token string
-		err := db.View(func(tx *bolt.Tx) error {
+		err = db.View(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("tokens"))
 			v := b.Get([]byte(appName))
 			token = string(v[:])
@@ -292,6 +332,9 @@ var onboardNode = cli.Command{
 			Name:  "node-fv",
 			Usage: "end node firmware version",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		nodeVID := c.String("node-vid")
@@ -299,10 +342,15 @@ var onboardNode = cli.Command{
 		appName := c.String("app-name")
 		nodeType := c.String("node-type")
 		nodeFv := c.String("node-fv")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		var gatewayID string
 		var user User
 		var token string
-		err := db.View(func(tx *bolt.Tx) error {
+		err = db.View(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("gateway-ids"))
 			v := b.Get([]byte(appName))
 			gatewayID = string(v[:])
@@ -381,12 +429,20 @@ var postCommand = cli.Command{
 		cli.BoolFlag{
 			Name: "trait",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		nodeVID := c.String("node-vid")
 		path := c.String("command-file")
 		appName := c.String("app-name")
 		isTrait := c.Bool("trait")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		b, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -444,10 +500,18 @@ var restore = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		var token string
 		appName := c.String("app-name")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		db.View(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("tokens"))
 			v := b.Get([]byte(appName))
@@ -459,7 +523,7 @@ var restore = cli.Command{
 		}
 		app := gConfig.Apps[appName]
 		addr := gConfig.GatewayAddress
-		err := _restore(addr, app, token)
+		err = _restore(addr, app, token)
 		if err != nil {
 			log.Fatalln("failed to restore: ", err)
 		}
@@ -487,16 +551,24 @@ var replaceNode = cli.Command{
 		cli.StringFlag{
 			Name: "app-name",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		nodeVID := c.String("node-vid")
 		newVID := c.String("new-vid")
 		nodePass := c.String("node-password")
 		appName := c.String("app-name")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		var user User
 		var nodeID string
 		var token string
-		err := db.View(func(tx *bolt.Tx) error {
+		err = db.View(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("users"))
 			v := b.Get([]byte(appName))
 			err := json.Unmarshal(v, &user)
@@ -566,10 +638,18 @@ var showDB = cli.Command{
 			Name:  "all",
 			Usage: "Specifiy this option to dump DB",
 		},
+		cli.StringFlag{
+			Name: "config",
+		},
 	},
 	Action: func(c *cli.Context) {
 		all := c.Bool("all")
 		bucketName := c.String("bucket")
+		configFile := c.String("config")
+		err := initWithConfig(configFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		if bucketName == "" && !all {
 			log.Fatalln("no bucket is specified")
 		}

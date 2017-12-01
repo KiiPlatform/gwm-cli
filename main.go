@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,6 +16,7 @@ import (
 type Config struct {
 	Apps           map[string]App `yaml:"apps"`
 	GatewayAddress GatewayAddress `yaml:"gateway-address"`
+	DB             string         `yaml:"db"`
 }
 
 type GatewayAddress struct {
@@ -44,18 +47,48 @@ var db *bolt.DB
 func main() {
 
 	kii.Logger = log.New(os.Stderr, "", log.LstdFlags)
-	b, err := ioutil.ReadFile("./config.yml")
+	app := cli.NewApp()
+	app.Name = "gw-manager"
+	app.Version = "1.0.0"
+	app.Usage = "Sample app shows how to manage Gateway"
+	app.Author = "Kii Corporation"
+	app.Email = "support@kii.com"
+	app.Commands = Commands
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "app-name",
+			Usage: "Specifiy app name configured in config file",
+		},
+		cli.StringFlag{
+			Name:  "config",
+			Usage: "Specify path of yml format config file",
+		},
+	}
+
+	app.Run(os.Args)
+}
+
+func initWithConfig(configFile string) error {
+	if configFile == "" {
+		configFile = "./config.yml"
+	}
+	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Fatalln("can't read ./config.yml file.")
+		return errors.New("can't read " + configFile + " file.")
 	}
 	err = yaml.Unmarshal(b, &gConfig)
 	if err != nil {
-		log.Fatalln("can't unmarshal ./config.yml")
+		return errors.New("can't unmarshal " + configFile + ".")
 	}
 
-	db, err = bolt.Open("manager.db", 0600, nil)
+	dbFile := gConfig.DB
+	if dbFile == "" {
+		dbFile = "manager.db"
+	}
+	fmt.Println(dbFile)
+	db, err = bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		log.Fatalln("can't open db")
+		return errors.New("can't open db: " + dbFile)
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("tokens"))
@@ -73,21 +106,7 @@ func main() {
 		return nil
 	})
 	if err != nil {
-		log.Fatalln("can't create bucket: ", err)
+		return errors.New(fmt.Sprintf("can't create bucket: %s", err))
 	}
-	app := cli.NewApp()
-	app.Name = "gw-manager"
-	app.Version = "1.0.0"
-	app.Usage = "Sample app shows how to manage Gateway"
-	app.Author = "Kii Corporation"
-	app.Email = "support@kii.com"
-	app.Commands = Commands
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "app-name",
-			Usage: "Specifiy app name configured in config.yml",
-		},
-	}
-
-	app.Run(os.Args)
+	return nil
 }
