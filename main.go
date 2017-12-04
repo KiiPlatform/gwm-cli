@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -45,50 +43,30 @@ var gConfig Config
 var db *bolt.DB
 
 func main() {
-
-	kii.Logger = log.New(os.Stderr, "", log.LstdFlags)
-	app := cli.NewApp()
-	app.Name = "gw-manager"
-	app.Version = "1.0.0"
-	app.Usage = "Sample app shows how to manage Gateway"
-	app.Author = "Kii Corporation"
-	app.Email = "support@kii.com"
-	app.Commands = Commands
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "app-name",
-			Usage: "Specifiy app name configured in config file",
-		},
-		cli.StringFlag{
-			Name:  "config",
-			Usage: "Specify path of yml format config file",
-		},
-	}
-
-	app.Run(os.Args)
-}
-
-func initWithConfig(configFile string) error {
-	if configFile == "" {
+	var configFile string
+	if os.Getenv("GWM_CONFIG") != "" {
+		configFile = os.Getenv("GWM_CONFIG")
+	} else {
 		configFile = "./config.yml"
 	}
+	kii.Logger = log.New(os.Stderr, "", log.LstdFlags)
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return errors.New("can't read " + configFile + " file.")
+		log.Fatalln("can't read ./config.yml file.")
 	}
 	err = yaml.Unmarshal(b, &gConfig)
 	if err != nil {
-		return errors.New("can't unmarshal " + configFile + ".")
+		log.Fatalln("can't unmarshal ./config.yml")
 	}
 
 	dbFile := gConfig.DB
 	if dbFile == "" {
 		dbFile = "manager.db"
 	}
-	fmt.Println(dbFile)
+
 	db, err = bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		return errors.New("can't open db: " + dbFile)
+		log.Fatalln("can't open db")
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("tokens"))
@@ -106,7 +84,23 @@ func initWithConfig(configFile string) error {
 		return nil
 	})
 	if err != nil {
-		return errors.New(fmt.Sprintf("can't create bucket: %s", err))
+		log.Fatalln("can't create bucket: ", err)
 	}
-	return nil
+
+	app := cli.NewApp()
+	app.Name = "gw-manager"
+	app.Version = "1.0.0"
+	app.Usage = "Sample app shows how to manage Gateway. Specify the path of config file with env variable GWM_CONFIG" +
+		"when config file located in different folder with binary file"
+	app.Author = "Kii Corporation"
+	app.Email = "support@kii.com"
+	app.Commands = Commands
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "app-name",
+			Usage: "Specifiy app name configured in config file",
+		},
+	}
+
+	app.Run(os.Args)
 }
