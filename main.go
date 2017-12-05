@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Apps           map[string]App `yaml:"apps"`
 	GatewayAddress GatewayAddress `yaml:"gateway-address"`
+	DB             string         `yaml:"db"`
 }
 
 type GatewayAddress struct {
@@ -42,20 +43,30 @@ var gConfig Config
 var db *bolt.DB
 
 func main() {
-
+	var configFile string
+	if os.Getenv("GWM_CONFIG_PATH") != "" {
+		configFile = os.Getenv("GWM_CONFIG_PATH")
+	} else {
+		configFile = "./config.yml"
+	}
 	kii.Logger = log.New(os.Stderr, "", log.LstdFlags)
-	b, err := ioutil.ReadFile("./config.yml")
+	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Fatalln("can't read ./config.yml file.")
+		log.Fatalln("can't read "+configFile+" file.", err)
 	}
 	err = yaml.Unmarshal(b, &gConfig)
 	if err != nil {
-		log.Fatalln("can't unmarshal ./config.yml")
+		log.Fatalln("can't unmarshal "+configFile, err)
 	}
 
-	db, err = bolt.Open("manager.db", 0600, nil)
+	dbFile := gConfig.DB
+	if dbFile == "" {
+		dbFile = "manager.db"
+	}
+
+	db, err = bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		log.Fatalln("can't open db")
+		log.Fatalln("can't open "+dbFile, err)
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("tokens"))
@@ -75,17 +86,19 @@ func main() {
 	if err != nil {
 		log.Fatalln("can't create bucket: ", err)
 	}
+
 	app := cli.NewApp()
 	app.Name = "gw-manager"
 	app.Version = "1.0.0"
-	app.Usage = "Sample app shows how to manage Gateway"
+	app.Usage = "Sample app shows how to manage Gateway. Specify the path of config file with env variable GWM_CONFIG_PATH" +
+		"when config file located in different folder with binary file"
 	app.Author = "Kii Corporation"
 	app.Email = "support@kii.com"
 	app.Commands = Commands
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "app-name",
-			Usage: "Specifiy app name configured in config.yml",
+			Usage: "Specifiy app name configured in config file",
 		},
 	}
 

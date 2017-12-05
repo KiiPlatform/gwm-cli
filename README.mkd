@@ -17,6 +17,16 @@ go build -tags debug
 cp example/config.yml .
 cp example/command.json .
 ```
+#### Use configuration under custom location
+By default, cli finds configuration located under same folder of it.
+If configuration file is needed to be in different folder, you can
+specify the path with environment variable `GWM_CONFIG_PATH` before execute
+cli commands.
+
+```shell
+cp example/config.yml path-to-config-file
+export GWM_CONFIG_PATH=path-to-config-file
+```
 
 ### Run
 ./gwm-cli --help

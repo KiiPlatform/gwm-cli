@@ -1,15 +1,16 @@
-apps: 
-  master: 
+apps:
+  master:
     app-id: 33ead916
     app-key: 9f73b8a40a24bb6c4299fda3623f1b00
     app-site: jp
     #app-host: developer.kii.com
-  ligths: 
+  ligths:
     app-id: dummyId2
     app-key: dummyKey2
     app-site: jp
     #app-host: developer.kii.com
-gateway-address: 
+gateway-address:
   host: "127.0.0.1"
   port: 4001
+db: "./manager.db"
 
