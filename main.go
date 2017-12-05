@@ -44,19 +44,19 @@ var db *bolt.DB
 
 func main() {
 	var configFile string
-	if os.Getenv("GWM_CONFIG") != "" {
-		configFile = os.Getenv("GWM_CONFIG")
+	if os.Getenv("GWM_CONFIG_PATH") != "" {
+		configFile = os.Getenv("GWM_CONFIG_PATH")
 	} else {
 		configFile = "./config.yml"
 	}
 	kii.Logger = log.New(os.Stderr, "", log.LstdFlags)
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Fatalln("can't read ./config.yml file.")
+		log.Fatalln("can't read ./config.yml file.", err)
 	}
 	err = yaml.Unmarshal(b, &gConfig)
 	if err != nil {
-		log.Fatalln("can't unmarshal ./config.yml")
+		log.Fatalln("can't unmarshal ./config.yml", err)
 	}
 
 	dbFile := gConfig.DB
@@ -90,7 +90,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gw-manager"
 	app.Version = "1.0.0"
-	app.Usage = "Sample app shows how to manage Gateway. Specify the path of config file with env variable GWM_CONFIG" +
+	app.Usage = "Sample app shows how to manage Gateway. Specify the path of config file with env variable GWM_CONFIG_PATH" +
 		"when config file located in different folder with binary file"
 	app.Author = "Kii Corporation"
 	app.Email = "support@kii.com"
