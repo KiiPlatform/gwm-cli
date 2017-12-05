@@ -66,7 +66,7 @@ func main() {
 
 	db, err = bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		log.Fatalln("can't open " + dbFile)
+		log.Fatalln("can't open "+dbFile, err)
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("tokens"))
