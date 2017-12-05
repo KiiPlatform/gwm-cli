@@ -52,11 +52,11 @@ func main() {
 	kii.Logger = log.New(os.Stderr, "", log.LstdFlags)
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		log.Fatalln("can't read ./config.yml file.", err)
+		log.Fatalln("can't read "+configFile+" file.", err)
 	}
 	err = yaml.Unmarshal(b, &gConfig)
 	if err != nil {
-		log.Fatalln("can't unmarshal ./config.yml", err)
+		log.Fatalln("can't unmarshal "+configFile, err)
 	}
 
 	dbFile := gConfig.DB
@@ -66,7 +66,7 @@ func main() {
 
 	db, err = bolt.Open(dbFile, 0600, nil)
 	if err != nil {
-		log.Fatalln("can't open db")
+		log.Fatalln("can't open " + dbFile)
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte("tokens"))
