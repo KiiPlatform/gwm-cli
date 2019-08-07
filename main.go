@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/KiiPlatform/kii_go"
+	kii "github.com/KiiPlatform/kii_go"
 	"github.com/boltdb/bolt"
 	"github.com/codegangsta/cli"
 	"gopkg.in/yaml.v2"
@@ -49,7 +49,7 @@ func main() {
 	} else {
 		configFile = "./config.yml"
 	}
-	kii.Logger = log.New(os.Stderr, "", log.LstdFlags)
+	kii.Logger = &Logger{}
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		log.Fatalln("can't read "+configFile+" file.", err)
